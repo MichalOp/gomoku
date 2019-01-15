@@ -41,9 +41,9 @@ int main( int argc,char *argv[] )
     gtk_box_pack_start(GTK_BOX(box1), grid, TRUE, TRUE, 0);
     GtkImage * label;
     GError **err;
-    black = gdk_pixbuf_new_from_file("./black.png",err);
-    white = gdk_pixbuf_new_from_file("./white.png",err);
-    unset = gdk_pixbuf_new_from_file("./unknown.png",err);
+    black = gdk_pixbuf_new_from_file("./images/black.png",err);
+    white = gdk_pixbuf_new_from_file("./images/white.png",err);
+    unset = gdk_pixbuf_new_from_file("./images/unknown.png",err);
 
     board bo = board_init(15,15,5,4);
     for(int i = 0; i < 15; i++)
