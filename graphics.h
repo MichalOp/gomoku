@@ -6,18 +6,22 @@ typedef struct board_button_data_t{
     int x;
     int y;
     GtkImage* image;
+    GdkPixbuf* template_images[3];
 } board_button_data;
 
-board_button_data* board_button_data_create(board bo, int x, int y, GtkImage* image);
+typedef struct window_state_t{
 
-typedef struct board_graphics_t{
+    GtkWidget* main_menu;
+    GtkWidget* server_setup_window;
+    GtkWidget* client_setup_window;
+    GtkWidget* game_window;
 
-    GtkWidget* root;
-    GtkWidget* parent;
-    void (*click_event)(int x, int y, void* data);
+}window_state;
 
-}board_graphics;
+typedef struct game_window_state_t{
+    window_state* main_window_state;
+};
 
-board_graphics board_graphics_create(GtkWidget* attach_to,board bo, void (*click_event_func)(int x, int y, void* data));
-void draw_board(board_graphics bg, board bo);
-void destory_board_graphics(board_graphics bg);
+void setup_menus();
+
+board_button_data* board_button_data_create(board bo, int x, int y, GtkImage* image, GdkPixbuf** template_images);

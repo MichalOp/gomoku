@@ -4,11 +4,10 @@
 #include "graphics.h"
 #include <stdbool.h>
 
-//GtkLabel * labels[256];
-
 GdkPixbuf *black;
 GdkPixbuf *white;
 GdkPixbuf *unset;
+
 int n = 15;
 // Prototypy własnych funkcji obsługi zdarzen´ srodowiska GTK+ 3.0 ´
 static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data);
@@ -19,7 +18,8 @@ static void dodaj_do_text( GtkWidget *widget, gpointer data);
 int main( int argc,char *argv[] )
 {
     gtk_init(&argc, &argv);
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    setup_menus();
+    /*GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window),"GTK - rysowanie kwadratów");
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
     gtk_container_set_border_width(GTK_CONTAINER(window), 10);
@@ -68,30 +68,12 @@ int main( int argc,char *argv[] )
     gtk_box_pack_start(GTK_BOX(box1), box2, TRUE, TRUE, 0);
 
     gtk_widget_show_all(window);
-    gtk_main();
+    */
+
+    //gtk_main();
     return 0;
 }
-static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
-{
-    board_button_data* board_data = (board_button_data*)data;
-    int color = 2;
-    int result = board_play(board_data->bo,board_data->x,board_data->y,color);
-    if(result!= INVALID_MOVE){
-        if(color == 1)
-            gtk_image_set_from_pixbuf(board_data->image,black);
-        else
-            gtk_image_set_from_pixbuf(board_data->image,white);
-    }else{
-        printf("FAILED\n");
-    }
-    if(result == WHITE_WIN){
-        printf("white won\n");
-    }
-    if(result == BLACK_WIN){
-        printf("black won\n");
-    }
-    g_print("GTK-test - %d %d zastal nacisniety\n",board_data->x,board_data->y);
-}
+
 // definicje własnych funkcji obsługi zdarzen´
 static void test_nacisniecia( GtkWidget *widget, gpointer data)
 {
@@ -104,7 +86,6 @@ static void wyjscie_przyciskiem( GtkWidget *widget, gpointer data)
     gtk_main_quit();
 }
 static void wypisz_wprowadzony_tekst( GtkWidget *widget, gpointer data)
-{
-    
+{    
     g_print ("GTK-test wprowadzono: %s\n", gtk_entry_get_text (GTK_ENTRY (data)));
 }
