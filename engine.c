@@ -1,6 +1,7 @@
 #include "engine.h"
 #include <stdlib.h>
 #include <stdio.h>
+
 board board_init(int sizex,int sizey,int win_count,int win_rule){
 
     board bo;

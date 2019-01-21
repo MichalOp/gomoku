@@ -1,3 +1,5 @@
+#pierwowzór tego makefile był supposedly oryginalnie stworzony przez Katarzynę Miernikiewicz
+
 TARGET?=gomoku
 SRC=$(wildcard *.c)
 OBJ=$(SRC:.c=.o)
@@ -25,3 +27,4 @@ run: $(TARGET)
 main.o: engine.h engine.o graphics.h graphics.o
 engine.o: engine.h
 graphics.o: graphics.h engine.o engine.h
+networking.o: networking.h

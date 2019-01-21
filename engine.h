@@ -11,7 +11,7 @@ typedef struct cell_t{
 }cell;
 
 typedef struct board_t{
-
+    
     int size_x;
     int size_y;
     cell **cells;
