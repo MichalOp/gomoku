@@ -1,18 +1,8 @@
-#define PORT 2137
+#define PORT 8080
 #include <sys/socket.h> 
 #include <netinet/in.h> 
 
-typedef struct sockaddr_in sockaddr_in;
+int init_server();
+int init_client(char* address);
 
-typedef struct connection_data_t{
-    int is_server;
-    int sock;
-    sockaddr_in server_info;
-    int newsocket;
-}connection_data;
-
-connection_data* init_server();
-connection_data* init_client(char* address);
-
-int send(char* data, connection_data* connection);
-int recv(char* data, connection_data* connection);
+int try_read(int sock, char* data, int buffer_size, int timeout_ms);

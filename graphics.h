@@ -18,6 +18,17 @@ typedef struct window_state_t{
 
 }window_state;
 
+typedef struct game_state_t{
+
+    window_state* window_s;
+    int mode;
+    int status;
+    int socket;   
+    int player;
+    board_button_data** buttons;
+
+}game_state;
+
 typedef struct game_window_state_t{
     window_state* main_window_state;
 };

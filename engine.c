@@ -15,11 +15,10 @@ board board_init(int sizex,int sizey,int win_count,int win_rule){
             bo.cells[i][j].color = 0;
         }
     }
-
+    
     bo.filled_cells = malloc(sizeof(int));
     bo.size_x = sizex;
     bo.size_y = sizey;
-
     return bo;
 }
 

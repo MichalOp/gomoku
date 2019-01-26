@@ -4,10 +4,6 @@
 #include "graphics.h"
 #include <stdbool.h>
 
-GdkPixbuf *black;
-GdkPixbuf *white;
-GdkPixbuf *unset;
-
 int n = 15;
 
 int main( int argc,char *argv[] )

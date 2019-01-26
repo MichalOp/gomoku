@@ -1,9 +1,14 @@
 #include "graphics.h"
+#include "networking.h"
+
 static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data);
 void to_main_menu(GtkWidget *widget, window_state *state);
 void to_server_setup(GtkWidget *widget, window_state *state);
 void to_client_setup(GtkWidget *widget, window_state *state);
 void to_game(GtkWidget *widget, window_state *state);
+
+void start_server(GtkWidget *widget, window_state *state);
+void client_connect(GtkWidget *widget, window_state *state);
 void quit(GtkWidget *widget, window_state *state);
 
 GtkWidget* make_window(){
@@ -27,10 +32,62 @@ void setup_main_menu(window_state* state){
     GtkWidget *button = gtk_button_new_with_label("Grać");
 
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_game),state);
+
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+
+    button = gtk_button_new_with_label("Utwórz serwer");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_server_setup),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+    
+    button = gtk_button_new_with_label("Dołącz do serwera");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_client_setup),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+    
     state->main_menu = window;
     gtk_widget_show_all(window);
     gtk_widget_hide(window);
+}
+
+void setup_server_menu(window_state* state){
+
+    GtkWidget* window = make_window();
+
+    GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(window), box1);
+
+    GtkWidget *button = gtk_button_new_with_label("Create basic Server");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(start_server),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+
+    button = gtk_button_new_with_label("Wrócić");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+    
+    state->server_setup_window = window;
+    gtk_widget_show_all(window);
+    gtk_widget_hide(window);
+
+}
+
+void setup_client_menu(window_state* state){
+
+    GtkWidget* window = make_window();
+
+    GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(window), box1);
+
+    GtkWidget *button = gtk_button_new_with_label("Connect to Local");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(client_connect),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+
+    button = gtk_button_new_with_label("Wrócić");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
+    
+    state->client_setup_window = window;
+    gtk_widget_show_all(window);
+    gtk_widget_hide(window);
+
 }
 
 void setup_game(window_state* state){
@@ -41,7 +98,6 @@ void setup_game(window_state* state){
     GtkWidget *button = gtk_button_new_with_label("Wrócić");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
-    gtk_widget_hide(window);
 
     GtkWidget *grid = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(grid), 0);
@@ -71,28 +127,55 @@ void setup_game(window_state* state){
     }
     state->game_window = window;
     gtk_widget_show_all(window);
+    gtk_widget_hide(window);
 }
 
 void to_game(GtkWidget *widget, window_state *state){
-    gtk_widget_hide(state->main_menu);
+    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
     gtk_widget_show(state->game_window);
 }
 
 void to_main_menu(GtkWidget *widget, window_state *state){
-    gtk_widget_hide(state->game_window);
+    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
     gtk_widget_show(state->main_menu);
+}
+
+void to_client_setup(GtkWidget *widget, window_state *state){    
+    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
+    gtk_widget_show(state->client_setup_window);
+}
+
+void to_server_setup(GtkWidget *widget, window_state *state){
+    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
+    gtk_widget_show(state->server_setup_window);
 }
 
 void setup_menus(){
     window_state* state = malloc(sizeof(window_state));
-
     setup_main_menu(state);
     setup_game(state);
+    setup_client_menu(state);
+    setup_server_menu(state);
     //gtk_widget_show_all(state->main_menu);
-    to_main_menu(NULL,state);
+    gtk_widget_show(state->main_menu);
 
     //gtk_widget_show(state->main_menu);
     gtk_main();
+}
+
+void start_server(GtkWidget *widget, window_state *state){
+    int sock = init_server();
+    printf("%d\n",sock);
+    char buffer[1024];
+    recv(sock,buffer,1024,0);
+    printf("%s\n",buffer);
+}
+
+void client_connect(GtkWidget *widget, window_state *state){
+    int sock = init_client("");
+    printf("%d\n",sock);
+    char *msg = "Things";
+    send(sock,msg,strlen(msg),0);
 }
 
 static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
