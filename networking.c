@@ -2,6 +2,30 @@
 #include <string.h> 
 #include "networking.h"
 #include <poll.h>
+#include <sys/select.h>
+
+int wait_for_connection(int s, int timeout){
+
+    int iResult;
+    struct timeval tv;
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(s, &rfds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = (long)timeout*1000;
+
+    iResult = select(s+1, &rfds, (fd_set *) 0, (fd_set *) 0, &tv);
+    if(iResult > 0)
+    {
+        return accept(s, NULL, NULL);
+    }
+    else
+    {
+        printf("waiting");
+    }
+    return 0;
+}
 
 int try_read(int sock, char* data, int buffer_size, int timeout_ms){
     struct pollfd fd;
@@ -15,8 +39,7 @@ int try_read(int sock, char* data, int buffer_size, int timeout_ms){
         case 0:
             return 0;
         default:
-            recv(sock,data, buffer_size, 0);
-            return ret;
+            return recv(sock,data, buffer_size, 0);
     }
 }
 
@@ -63,12 +86,7 @@ int init_server(){
         exit(EXIT_FAILURE); 
     } 
     
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&sockaddr_data, (socklen_t*)&addrlen))<0) 
-    { 
-        perror("accept"); 
-        exit(EXIT_FAILURE); 
-    } 
-    return new_socket;  
+    return server_fd;  
 }
 
 int init_client(char* address){
