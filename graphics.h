@@ -15,6 +15,7 @@ typedef struct connection_data_t{
     bool try_to_connect;
     int base_server_socket;
     int final_socket;
+    char* address;
 
 }server_connection_data;
 

@@ -14,7 +14,7 @@ bool on_connect(window_state* state);
 void start_server(GtkWidget *widget, window_state *state);
 void client_connect(GtkWidget *widget, window_state *state);
 void quit(GtkWidget *widget, window_state *state);
-
+void edit_address(GtkWidget* widget, GdkEvent  *event, window_state* state);
 void try_play(game_state* game, int x, int y);
 bool await_other_side(game_state* game);
 
@@ -75,7 +75,6 @@ void setup_server_menu(window_state* state){
     state->server_setup_window = window;
     gtk_widget_show_all(window);
     gtk_widget_hide(window);
-
 }
 
 void setup_client_menu(window_state* state){
@@ -84,6 +83,20 @@ void setup_client_menu(window_state* state){
 
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), box1);
+
+    server_connection_data* connection_data = malloc(sizeof(server_connection_data));
+    connection_data->address = malloc(256);
+    strcpy(connection_data->address,"127.0.0.1");
+
+    GtkWidget* text = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(text), 50);
+    
+    gtk_entry_set_text(GTK_ENTRY(text), "127.0.0.1");
+    //gint tmp_pos = gtk_entry_get_text_length(GTK_ENTRY(text));
+    //gtk_editable_insert_text(GTK_EDITABLE(text), " jakis tekst", -1, &tmp_pos);
+    gtk_editable_select_region(GTK_EDITABLE(text), 0, gtk_entry_get_text_length(GTK_ENTRY(text)));
+    g_signal_connect(G_OBJECT(text), "focus-out-event", G_CALLBACK(edit_address),state);
+    gtk_box_pack_start(GTK_BOX(box1), text, TRUE, TRUE, 0);
 
     GtkWidget *button = gtk_button_new_with_label("Connect to Local");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(client_connect),state);
@@ -94,6 +107,7 @@ void setup_client_menu(window_state* state){
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
     
     state->client_setup_window = window;
+    state->connection_data = connection_data;
     gtk_widget_show_all(window);
     gtk_widget_hide(window);
 
@@ -167,6 +181,12 @@ void to_server_setup(GtkWidget *widget, window_state *state){
     gtk_widget_show(state->server_setup_window);
 }
 
+void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
+    strcpy(state->connection_data->address, gtk_entry_get_text(GTK_ENTRY(widget)));
+    printf("%s\n", state->connection_data->address);
+    //return FALSE;
+}
+
 void setup_menus(){
     window_state* state = malloc(sizeof(window_state));
     setup_main_menu(state);
@@ -181,7 +201,7 @@ void setup_menus(){
 
 void start_server(GtkWidget *widget, window_state *state){
     int sock = init_server();
-    server_connection_data* connection_data = malloc(sizeof(server_connection_data));
+    server_connection_data* connection_data = state->connection_data;
     connection_data->try_to_connect = true;
     connection_data->base_server_socket = sock;
     connection_data->final_socket = 0;
@@ -240,7 +260,7 @@ bool on_connect(window_state* state){
 void client_connect(GtkWidget *widget, window_state *state){
     state->game_state->player = 2;
     state->game_state->now_plays = 1;
-    int sock = init_client("");
+    int sock = init_client(state->connection_data->address);
     printf("%d\n",sock);
     state->game_state->socket = sock;
     g_timeout_add(0,G_CALLBACK(on_connect), state);

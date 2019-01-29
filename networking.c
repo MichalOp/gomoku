@@ -106,7 +106,7 @@ int init_client(char* address){
     sockaddr_data.sin_port = htons(PORT); 
        
     // Convert IPv4 and IPv6 addresses from text to binary form 
-    if(inet_pton(AF_INET, "127.0.0.1", &sockaddr_data.sin_addr)<=0)  
+    if(inet_pton(AF_INET, address, &sockaddr_data.sin_addr)<=0)  
     { 
         printf("\nInvalid address/ Address not supported \n"); 
         exit(EXIT_FAILURE); 
