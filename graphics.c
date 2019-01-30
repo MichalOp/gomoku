@@ -178,12 +178,6 @@ void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
     //return FALSE;
 }
 
-void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
-    strcpy(state->connection_data->address, gtk_entry_get_text(GTK_ENTRY(widget)));
-    printf("%s\n", state->connection_data->address);
-    //return FALSE;
-}
-
 void setup_menus(){
     window_state* state = malloc(sizeof(window_state));
     GtkWidget* window = make_window();
@@ -343,8 +337,6 @@ bool await_other_side(window_state* window){
     }
     return true;
 }
-
-
 
 board_button_data* board_button_data_create(window_state* state, int x, int y, GtkImage* image, GdkPixbuf** images){
     board_button_data* data = malloc(sizeof(board_button_data));
