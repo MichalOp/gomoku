@@ -32,11 +32,8 @@ typedef struct game_state_t{
 }game_state;
 
 typedef struct window_state_t{
-
-    GtkWidget* main_menu;
-    GtkWidget* server_setup_window;
-    GtkWidget* client_setup_window;
-    GtkWidget* game_window;
+    GtkWidget* window;
+    GtkWidget* stack;
     server_connection_data* connection_data;
     game_state* game_state;
 
@@ -44,4 +41,4 @@ typedef struct window_state_t{
 
 void setup_menus();
 
-board_button_data* board_button_data_create(game_state* state,int x, int y, GtkImage* image, GdkPixbuf** template_images);
+board_button_data* board_button_data_create(window_state* state,int x, int y, GtkImage* image, GdkPixbuf** template_images);

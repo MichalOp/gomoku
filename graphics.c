@@ -15,10 +15,19 @@ void start_server(GtkWidget *widget, window_state *state);
 void client_connect(GtkWidget *widget, window_state *state);
 void quit(GtkWidget *widget, window_state *state);
 void edit_address(GtkWidget* widget, GdkEvent  *event, window_state* state);
-void try_play(game_state* game, int x, int y);
-bool await_other_side(game_state* game);
+void try_play(window_state* window, int x, int y);
+bool await_other_side(window_state* window);
 
-void start_game(game_state* game);
+void start_game(window_state* window);
+
+void show_info(GtkWidget* window, char *komunikat)
+{
+    GtkWidget *dialog;
+    dialog = gtk_message_dialog_new (GTK_WINDOW(window),GTK_DIALOG_DESTROY_WITH_PARENT,
+    GTK_MESSAGE_INFO,GTK_BUTTONS_CLOSE,"%s",komunikat);
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+}
 
 GtkWidget* make_window(){
 
@@ -33,18 +42,8 @@ GtkWidget* make_window(){
 
 void setup_main_menu(window_state* state){
 
-    GtkWidget* window = make_window();
-
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(window), box1);
-
-    GtkWidget *button = gtk_button_new_with_label("Grać");
-
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_game),state);
-
-    gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
-
-    button = gtk_button_new_with_label("Utwórz serwer");
+    GtkWidget *button = gtk_button_new_with_label("Utwórz serwer");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_server_setup),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
     
@@ -52,37 +51,36 @@ void setup_main_menu(window_state* state){
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_client_setup),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
     
-    state->main_menu = window;
-    gtk_widget_show_all(window);
-    gtk_widget_hide(window);
+    GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+    gtk_widget_set_halign(box1,GTK_ALIGN_CENTER);
+    gtk_box_set_center_widget(box2,box1);
+
+    gtk_stack_add_named(state->stack,box2,"main_menu");
 }
 
 void setup_server_menu(window_state* state){
 
-    GtkWidget* window = make_window();
-
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(window), box1);
 
-    GtkWidget *button = gtk_button_new_with_label("Create basic Server");
+    GtkWidget *button = gtk_button_new_with_label("Utwórz podstawowy serwer");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(start_server),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
 
-    button = gtk_button_new_with_label("Wrócić");
+    button = gtk_button_new_with_label("Powrót");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
-    
-    state->server_setup_window = window;
-    gtk_widget_show_all(window);
-    gtk_widget_hide(window);
+
+    GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_halign(box1,GTK_ALIGN_CENTER);
+    gtk_box_set_center_widget(box2,box1);
+
+    gtk_stack_add_named(state->stack,box2,"server_menu");
 }
 
 void setup_client_menu(window_state* state){
 
-    GtkWidget* window = make_window();
-
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(window), box1);
 
     server_connection_data* connection_data = malloc(sizeof(server_connection_data));
     connection_data->address = malloc(256);
@@ -98,26 +96,26 @@ void setup_client_menu(window_state* state){
     g_signal_connect(G_OBJECT(text), "focus-out-event", G_CALLBACK(edit_address),state);
     gtk_box_pack_start(GTK_BOX(box1), text, TRUE, TRUE, 0);
 
-    GtkWidget *button = gtk_button_new_with_label("Connect to Local");
+    GtkWidget *button = gtk_button_new_with_label("Dołącz do serwera");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(client_connect),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
 
-    button = gtk_button_new_with_label("Wrócić");
+    button = gtk_button_new_with_label("Powrót");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
     
-    state->client_setup_window = window;
     state->connection_data = connection_data;
-    gtk_widget_show_all(window);
-    gtk_widget_hide(window);
+    GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
+    gtk_widget_set_halign(box1,GTK_ALIGN_CENTER);
+    gtk_box_set_center_widget(box2,box1);
+
+    gtk_stack_add_named(state->stack,box2,"client_menu");
 }
 
 void setup_game(window_state* state){
-    GtkWidget* window = make_window();
 
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(window), box1);
     GtkWidget *button = gtk_button_new_with_label("Wrócić");
     g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
@@ -148,37 +146,36 @@ void setup_game(window_state* state){
             GtkEventBox* event_box = gtk_event_box_new();
             label = gtk_image_new_from_pixbuf(template_pictures[0]);
             gtk_container_add(event_box,label);
-            board_button_data *data_to_pass = board_button_data_create(game_s,i,j,label,template_pictures);
+            board_button_data *data_to_pass = board_button_data_create(state,i,j,label,template_pictures);
             game_s->buttons[i][j] = data_to_pass;
             g_signal_connect(G_OBJECT(event_box),"button_press_event", G_CALLBACK(play_button_press),(gpointer)data_to_pass);
             gtk_grid_attach(GTK_GRID(grid), event_box, i, j, 1, 1);
         }
     }
-    state->game_window = window;
     state->game_state = game_s;
-
-    gtk_widget_show_all(window);
-    gtk_widget_hide(window);
+    gtk_stack_add_named(state->stack,box1,"game");
 }
 
 void to_game(GtkWidget *widget, window_state *state){
-    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
-    gtk_widget_show(state->game_window);
+    gtk_stack_set_visible_child_name(state->stack,"game");
 }
 
 void to_main_menu(GtkWidget *widget, window_state *state){
-    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
-    gtk_widget_show(state->main_menu);
+    gtk_stack_set_visible_child_name(state->stack,"main_menu");
 }
 
-void to_client_setup(GtkWidget *widget, window_state *state){    
-    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
-    gtk_widget_show(state->client_setup_window);
+void to_client_setup(GtkWidget *widget, window_state *state){
+    gtk_stack_set_visible_child_name(state->stack,"client_menu");
 }
 
 void to_server_setup(GtkWidget *widget, window_state *state){
-    gtk_widget_hide(GTK_WIDGET(gtk_widget_get_toplevel(widget)));
-    gtk_widget_show(state->server_setup_window);
+    gtk_stack_set_visible_child_name(state->stack,"server_menu");
+}
+
+void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
+    strcpy(state->connection_data->address, gtk_entry_get_text(GTK_ENTRY(widget)));
+    printf("%s\n", state->connection_data->address);
+    //return FALSE;
 }
 
 void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
@@ -189,13 +186,21 @@ void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
 
 void setup_menus(){
     window_state* state = malloc(sizeof(window_state));
+    GtkWidget* window = make_window();
+    GtkWidget* stack = gtk_stack_new();
+    gtk_container_add(GTK_CONTAINER(window), stack);
+    state->stack = stack;
+    state->window = window;
+    
+    
     setup_main_menu(state);
     setup_game(state);
     setup_client_menu(state);
     setup_server_menu(state);
     //gtk_widget_show_all(state->main_menu);
-    gtk_widget_show(state->main_menu);
+    to_main_menu(NULL,state);
     //gtk_widget_show(state->main_menu);
+    gtk_widget_show_all(window);
     gtk_main();
 }
 
@@ -233,7 +238,8 @@ bool await_connection(window_state* data){
     return true;
 }
 
-void start_game(game_state* state){
+void start_game(window_state* window){
+    game_state* state = window->game_state;
     //board_free(state->bo);
     state->bo = board_init(15,15,5,4);
     for(int i = 0; i< state->bo.size_x; i++){
@@ -242,7 +248,7 @@ void start_game(game_state* state){
         }
     }
     if(state->player != (state->now_plays)){
-        g_timeout_add(100,G_CALLBACK(await_other_side),state);
+        g_timeout_add(100,G_CALLBACK(await_other_side),window);
         g_print("awaiting");
     }
 }
@@ -250,7 +256,7 @@ void start_game(game_state* state){
 bool on_connect(window_state* state){
 
     printf("that actually worked, damn sonnnnn\n");
-    start_game(state->game_state);
+    start_game(state);
     to_game(NULL,state);
     
     return false;
@@ -272,8 +278,8 @@ static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
     try_play(board_data->game_data,board_data->x,board_data->y);
 }
 
-void try_play(game_state* game, int x, int y){
-
+void try_play(window_state* window, int x, int y){
+    game_state* game = window->game_state;
     if((game->player) == (game->now_plays)){
         int result = board_play(game->bo,x,y,game->player);
         g_print("played");
@@ -289,15 +295,23 @@ void try_play(game_state* game, int x, int y){
 
             if(result == PLAYING){
                 game->now_plays = 3-(game->now_plays);
-                g_timeout_add(100,G_CALLBACK(await_other_side),game);
+                g_timeout_add(100,G_CALLBACK(await_other_side),window);
             }else{
+
+                if(game->now_plays==game->player){
+                    show_info(window->window,"Wygrałeś");
+                }else{
+                    show_info(window->window,"Przegrałeś");
+                }
                 g_print("someone won");
             }
         }
     }   
 }
 
-bool await_other_side(game_state* game){
+bool await_other_side(window_state* window){
+    game_state* game = window->game_state;
+
     char buffer[256];
     int result = try_read(game->socket,buffer,256,10);
     buffer[result] = 0;
@@ -317,6 +331,11 @@ bool await_other_side(game_state* game){
             if(result == PLAYING){
                 game->now_plays = 3-(game->now_plays);
             }else{
+                if(game->now_plays==game->player){
+                    show_info(window->window,"Wygrałeś");
+                }else{
+                    show_info(window->window,"Przegrałeś");
+                }
                 g_print("someone won");
             }
         }
@@ -327,7 +346,7 @@ bool await_other_side(game_state* game){
 
 
 
-board_button_data* board_button_data_create(game_state* state, int x, int y, GtkImage* image, GdkPixbuf** images){
+board_button_data* board_button_data_create(window_state* state, int x, int y, GtkImage* image, GdkPixbuf** images){
     board_button_data* data = malloc(sizeof(board_button_data));
     data->game_data = (void*)state;
     data->x = x;
