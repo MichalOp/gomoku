@@ -18,6 +18,8 @@ void quit(GtkWidget *widget, window_state *state);
 void edit_address(GtkWidget* widget, GdkEvent  *event, window_state* state);
 void try_play(window_state* window, int x, int y);
 void select_game_mode(GtkWidget* widget, window_state* state);
+void cancel_move(GtkWidget* widget, window_state* state);
+void execute_move(GtkWidget* widget, window_state* state);
 int await_other_side(void * data);
 
 void start_game(window_state* window);
@@ -199,11 +201,11 @@ GtkWidget* setup_game_menu_stack(window_state* state){
     GtkWidget* box4 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
     button = gtk_button_new_with_label("Cofnij");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(cancel_move),state);
     gtk_box_pack_start(GTK_BOX(box4), button, TRUE, FALSE, 10);
 
     button = gtk_button_new_with_label("Wykonaj ruch");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(execute_move),state);
     gtk_box_pack_start(GTK_BOX(box4), button, TRUE, FALSE, 10);
 
     gtk_box_pack_start(GTK_BOX(main_box), box4, TRUE, FALSE, 10);
@@ -367,7 +369,7 @@ int await_connection(void * data){
 void start_game(window_state* window){
     game_state* state = window->game_state;
     //board_free(state->bo);
-    state->bo = board_init(15,15,5,4);
+    state->bo = board_init(15,15,5,WIN_RULE_GREATER_OR_EQUAL);
     for(int i = 0; i< state->bo.size_x; i++){
         for(int j = 0; j< state->bo.size_y; j++){
             gtk_image_set_from_pixbuf(state->buttons[i][j]->image,state->buttons[i][j]->template_images[0]);
@@ -379,10 +381,21 @@ void start_game(window_state* window){
     }
 }
 
+void reset_board_to_data(window_state* window){
+    game_state *game = window->game_state;
+    board bo = game->bo;
+    for(int x = 0; x < bo.size_x; x++){
+        for(int y = 0; y<bo.size_y; y++){
+            gtk_image_set_from_pixbuf(game->buttons[x][y]->image,game->buttons[x][y]->template_images[bo.cells[x][y].color]);
+        }
+    }
+}
+
 int on_connect(void * data){
 
     window_state* state = (window_state*) data;
     printf("that actually worked, damn sonnnnn\n");
+
     start_game(state);
     to_game(NULL,state);
     
@@ -407,54 +420,89 @@ static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
 
 void try_play(window_state* window, int x, int y){
     game_state* game = window->game_state;
-    if((game->player) == (game->now_plays)){
-        int result = board_play(game->bo,x,y,game->player);
+    if(game->ended)
+        return;
+    if((game->player) == (game->now_plays)&& game->plays_left>0){
+        int result = board_play(game->bo,x,y,game->player,1);
+        
         g_print("played");
+
         if(result != INVALID_MOVE){
+            game->plays_left--;
             
-            char message[256];
-            sprintf(message,"%d %d",x,y);
-            if(send(game->socket,message,strlen(message),0)==-1){
-                g_print("FAILED TO SEND");
-            }
-
             gtk_image_set_from_pixbuf(game->buttons[x][y]->image,game->buttons[x][y]->template_images[game->player]);
-
-            if(result == PLAYING){
-                game->now_plays = 3-(game->now_plays);
-                g_timeout_add(100,await_other_side,window);
-            }else{
-
-                if(game->now_plays==game->player){
-                    show_info(window->window,"Wygrałeś");
-                }else{
-                    show_info(window->window,"Przegrałeś");
-                }
-                g_print("someone won");
-            }
         }
     }   
+}
+
+void execute_move(GtkWidget *widget, window_state *state){
+    char message[1024];
+    message[0] = 0;
+    if(state->game_state->mode!=2||state->game_state->mode<3){
+        sprintf(message,"0;");
+    }
+
+    int result = board_execute_marked(state->game_state->bo,message);
+
+    if(strlen(message)<=2){
+        return;
+    }
+
+    state->game_state->plays_left = 1;
+
+    if(result == PLAYING){
+        
+        state->game_state->now_plays = 3-(state->game_state->now_plays);
+        g_timeout_add(100,await_other_side,state);
+
+    }else{
+
+        if(state->game_state->now_plays==state->game_state->player){
+            show_info(state->window,"Wygrałeś");
+        }else{
+            show_info(state->window,"Przegrałeś");
+        }
+        state->game_state->ended = 1;
+    }
+    
+    if(send(state->game_state->socket,message,strlen(message),0)==-1){
+        g_print("FAILED TO SEND");
+    }
+}
+
+void cancel_move(GtkWidget *widget, window_state *state){
+    board_clear_marked(state->game_state->bo);
+    reset_board_to_data(state);
+    state->game_state->plays_left = 1;
 }
 
 int await_other_side(void * data){
     window_state* window = (window_state*) data;
     game_state* game = window->game_state;
 
-    char buffer[256];
-    int result = try_read(game->socket,buffer,256,10);
-    buffer[result] = 0;
+    char buffer[1024];
+    int result = try_read(game->socket,buffer,1024,10);
+    
     if(result>0){
-        
-        printf("%s", buffer);
+        buffer[result] = 0;
 
-        int x, y;
+        printf("%s\n", buffer);
 
-        sscanf(buffer,"%d %d",&x,&y);
+        int special;
+        sscanf(buffer,"%d",&special);
+        printf("special: %d\n",special);
+        char* data_start = buffer;
 
-        int result = board_play(game->bo,x,y,game->now_plays);
+        while(*data_start!=';'){
+            data_start = data_start + 1;
+        }
+        data_start = data_start + 1;
+
+        int result = board_execute_from_char(game->bo,data_start);
+        printf("that completed");
+        reset_board_to_data(window);
+
         if(result != INVALID_MOVE){
-
-            gtk_image_set_from_pixbuf(game->buttons[x][y]->image,game->buttons[x][y]->template_images[game->now_plays]);
 
             if(result == PLAYING){
                 game->now_plays = 3-(game->now_plays);

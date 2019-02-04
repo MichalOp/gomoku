@@ -8,6 +8,7 @@
 
 typedef struct cell_t{
     int color;
+    int temporary;
 }cell;
 
 typedef struct board_t{
@@ -23,4 +24,7 @@ typedef struct board_t{
 
 void board_free(board b);
 board board_init(int sizex, int sizey, int win_count,int win_rule);
-int board_play(board b, int x, int y, int color);
+int board_play(board b, int x, int y, int color, int temporary);
+int board_execute_marked(board b, char* moves);
+int board_execute_from_char(board b, char* moves);
+void board_clear_marked(board b);

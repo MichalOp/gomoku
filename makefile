@@ -4,19 +4,15 @@ CC?=gcc
 CFLAGS?= -Werror -Wall -std=c11 -O3 $(shell pkg-config gtk+-3.0 --cflags)
 LDLIBS= $(shell pkg-config gtk+-3.0 --libs)
 
-.PHONY: all install clean run
+.PHONY: all clean run
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET) $(LDLIBS)
 
-
-install:
-	@-install -m 755 $(TARGET)
-
 clean:
-	@-rm -f $(TARGET) $(OBJ) AtoB BtoA
+	@-rm -f $(TARGET) $(OBJ)
 
 run: $(TARGET)
 	./$(TARGET)
