@@ -27,6 +27,8 @@ typedef struct game_state_t{
     int socket;   
     int player;
     int now_plays;
+    GtkWidget* game_menu_stack;
+    GtkWidget* info_label;
     board_button_data*** buttons;
     
 }game_state;

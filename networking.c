@@ -2,7 +2,9 @@
 #include <string.h> 
 #include "networking.h"
 #include <poll.h>
+#include <stdio.h>
 #include <sys/select.h>
+#include <arpa/inet.h>
 
 int wait_for_connection(int s, int timeout){
 
@@ -46,9 +48,8 @@ int try_read(int sock, char* data, int buffer_size, int timeout_ms){
 int init_server(){
 
     struct sockaddr_in sockaddr_data;
-    int server_fd, new_socket, valread; 
+    int server_fd; 
     int opt = 1; 
-    int addrlen = sizeof(sockaddr_data); 
 
     printf("INITIALIZING SERVER\n");
 
@@ -92,7 +93,7 @@ int init_server(){
 int init_client(char* address){
 
     struct sockaddr_in sockaddr_data;
-    int sock = 0, valread;
+    int sock = 0;
     
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 

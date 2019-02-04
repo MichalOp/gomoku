@@ -1,10 +1,7 @@
-#pierwowzór tego makefile był supposedly oryginalnie stworzony przez Katarzynę Miernikiewicz
-
 TARGET?=gomoku
-SRC=$(wildcard *.c)
-OBJ=$(SRC:.c=.o)
+OBJ= main.o engine.o graphics.o networking.o
 CC?=gcc
-CFLAGS?= -Wall -std=c11 -O3 $(shell pkg-config gtk+-3.0 --cflags)
+CFLAGS?= -Werror -Wall -std=c11 -O3 $(shell pkg-config gtk+-3.0 --cflags)
 LDLIBS= $(shell pkg-config gtk+-3.0 --libs)
 
 .PHONY: all install clean run
@@ -24,7 +21,7 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
-main.o: engine.h engine.o graphics.h graphics.o
+main.o: engine.o graphics.o networking.o
 engine.o: engine.h
-graphics.o: graphics.h engine.o engine.h
+graphics.o: graphics.h engine.o
 networking.o: networking.h

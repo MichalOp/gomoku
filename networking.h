@@ -1,6 +1,6 @@
-#define PORT 13264
 #include <sys/socket.h> 
 #include <netinet/in.h> 
+#define PORT 13264
 
 int init_server();
 int wait_for_connection(int sock, int timeout_ms);
