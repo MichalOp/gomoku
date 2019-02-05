@@ -24,6 +24,8 @@ typedef struct game_state_t{
     board bo;
     int mode;
     int status;
+    int recv_status;
+    int executed;
     int socket;   
     int player;
     int now_plays;

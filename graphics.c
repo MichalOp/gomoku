@@ -3,6 +3,18 @@
 #include <glib.h>
 #include <stdio.h>
 
+#define NORMAL 0
+#define PRO_1 1
+#define PRO_2 2
+#define PRO_3 3
+#define SWAP_1 4
+#define SWAP_2 5
+#define SWAP_2_SWAP 6
+#define SWAP_2_PLAY 7
+#define SWAP_2_PLAY2 8
+#define SWAP_3 9
+#define SWAP_3_SWAP 10
+
 static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data);
 void to_main_menu(GtkWidget *widget, window_state *state);
 void to_server_setup(GtkWidget *widget, window_state *state);
@@ -20,6 +32,12 @@ void try_play(window_state* window, int x, int y);
 void select_game_mode(GtkWidget* widget, window_state* state);
 void cancel_move(GtkWidget* widget, window_state* state);
 void execute_move(GtkWidget* widget, window_state* state);
+void update_status_change(int status,window_state* window);
+
+void click_play_normally(GtkWidget* widget, window_state* state);
+void click_swap(GtkWidget* widget, window_state* state);
+void click_play_two(GtkWidget* widget, window_state* state);
+
 int await_other_side(void * data);
 
 void start_game(window_state* window);
@@ -162,16 +180,16 @@ GtkWidget* setup_game_menu_stack(window_state* state){
 
     GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-    button = gtk_button_new_with_label("Wyjście");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    button = gtk_button_new_with_label("Graj białymi");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(click_play_normally),state);
     gtk_box_pack_start(GTK_BOX(box2), button, TRUE, FALSE, 0);
 
-    button = gtk_button_new_with_label("Wyjście");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    button = gtk_button_new_with_label("Zagraj dwa");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(click_play_two),state);
     gtk_box_pack_start(GTK_BOX(box2), button, TRUE, FALSE, 0);
 
-    button = gtk_button_new_with_label("Wyjście");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    button = gtk_button_new_with_label("Graj czarnymi");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(click_swap),state);
 
     
     gtk_box_pack_start(GTK_BOX(box2), button, TRUE, FALSE, 0);
@@ -183,12 +201,12 @@ GtkWidget* setup_game_menu_stack(window_state* state){
     box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     label = gtk_label_new("Special options");
 
-    button = gtk_button_new_with_label("Wyjście");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    button = gtk_button_new_with_label("Graj białymi");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(click_swap),state);
     gtk_box_pack_start(GTK_BOX(box3), button, TRUE, FALSE, 0);
 
-    button = gtk_button_new_with_label("Wyjście");
-    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(to_main_menu),state);
+    button = gtk_button_new_with_label("Graj czarnymi");
+    g_signal_connect(G_OBJECT(button), "clicked",G_CALLBACK(click_play_normally),state);
     
     gtk_box_pack_start(GTK_BOX(box3), button, TRUE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(box1), box3, TRUE, TRUE, 0);
@@ -288,6 +306,22 @@ void to_server_setup(GtkWidget *widget, window_state *state){
     gtk_stack_set_visible_child_name(GTK_STACK(state->stack),"server_menu");
 }
 
+void click_swap(GtkWidget *widget, window_state *state){
+    if(state->game_state->status == SWAP_2){
+        update_status_change(SWAP_2_SWAP,state);
+    }else{
+        update_status_change(SWAP_3_SWAP,state);
+    }
+}
+
+void click_play_two(GtkWidget *widget, window_state *state){
+    update_status_change(SWAP_2_PLAY2,state);
+}
+
+void click_play_normally(GtkWidget *widget, window_state *state){
+    update_status_change(NORMAL,state);
+}
+
 void select_game_mode(GtkWidget *widget, window_state *state){
     GSList* group = gtk_radio_button_get_group(GTK_RADIO_BUTTON(widget));
     group = g_slist_copy(group);
@@ -366,8 +400,69 @@ int await_connection(void * data){
     return TRUE;
 }
 
+void update_status_change(int status,window_state* window){ //JESUS CHRIST
+    game_state* state = window->game_state;
+    state->status = status;
+    switch(status){
+        case NORMAL:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 1;
+        break;
+        case PRO_1:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 0;
+        break;
+        case PRO_2:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 1;
+        break;
+        case PRO_3:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 1;
+        break;
+        case SWAP_1:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 3;
+        break;
+        case SWAP_2:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"swap2_2");
+            state->plays_left = 0;
+        break;
+        case SWAP_2_PLAY2:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 2;
+        break;
+        case SWAP_2_PLAY:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 1;
+        break;
+        case SWAP_2_SWAP:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 0;
+            state->player = 3-state->player;
+            state->now_plays = state->player;
+            state->recv_status = NORMAL;
+        break;
+        case SWAP_3:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"swap2_1");
+            state->plays_left = 0;
+        case SWAP_3_SWAP:
+            gtk_stack_set_visible_child_name(GTK_STACK(state->game_menu_stack),"normal");
+            state->plays_left = 0;
+            state->player = 3-state->player;
+            state->now_plays = state->player;
+            state->recv_status = NORMAL;
+        break;
+        default: 
+        printf("\nwhat?\n");
+    }
+}
+
 void start_game(window_state* window){
     game_state* state = window->game_state;
+    if(state->now_plays == state->player){
+        update_status_change(state->status, window);
+    }
     //board_free(state->bo);
     state->bo = board_init(15,15,5,WIN_RULE_GREATER_OR_EQUAL);
     for(int i = 0; i< state->bo.size_x; i++){
@@ -396,11 +491,41 @@ int on_connect(void * data){
     window_state* state = (window_state*) data;
     printf("that actually worked, damn sonnnnn\n");
 
+    int side; 
+
+    char start_msg[256];
+
+    if(state->connection_data->base_server_socket != 0){ //server
+        side = rand()%2;
+        sprintf(start_msg,"%d %d",1-side,state->game_state->mode);
+        send(state->game_state->socket,start_msg,strlen(start_msg),0);
+    }else{  //client
+        recv(state->game_state->socket,start_msg,256,0);
+        sscanf(start_msg,"%d %d",&side,&state->game_state->mode);
+    }
+    game_state* game = state->game_state;
+    game->now_plays = 1;
+    if(side == 0){
+        game->player = 1;
+    }else{
+        game->player = 2;
+    }
+    if(game->mode == 0){
+        game->status = NORMAL;
+        game->recv_status = NORMAL;
+    }
+    if(game->mode == 1){
+        game->status = PRO_1;
+        game->recv_status = PRO_1;
+    }
+    if(game->mode == 2){
+        game->status = SWAP_1;
+        game->recv_status = SWAP_1;
+    }
     start_game(state);
     to_game(NULL,state);
-    
-    return FALSE;
 
+    return FALSE;
 }
 
 void client_connect(GtkWidget *widget, window_state *state){
@@ -423,35 +548,35 @@ void try_play(window_state* window, int x, int y){
     if(game->ended)
         return;
     if((game->player) == (game->now_plays)&& game->plays_left>0){
-        int result = board_play(game->bo,x,y,game->player,1);
+        int color = game->player;
+        if(game->plays_left == 2)
+            color = 2; //that is a goddamn hack
+        int result = board_play(game->bo,x,y,color,1);
         
         g_print("played");
 
         if(result != INVALID_MOVE){
             game->plays_left--;
-            
-            gtk_image_set_from_pixbuf(game->buttons[x][y]->image,game->buttons[x][y]->template_images[game->player]);
+            gtk_image_set_from_pixbuf(game->buttons[x][y]->image,game->buttons[x][y]->template_images[color]);
         }
     }   
 }
 
 void execute_move(GtkWidget *widget, window_state *state){
+
     char message[1024];
     message[0] = 0;
-    if(state->game_state->mode!=2||state->game_state->mode<3){
-        sprintf(message,"0;");
-    }
+    
+    sprintf(message,"%d;",state->game_state->status);
 
     int result = board_execute_marked(state->game_state->bo,message);
 
-    if(strlen(message)<=2){
+    if(state->game_state->plays_left != 0){
         return;
     }
-
-    state->game_state->plays_left = 1;
+    state->game_state->executed = 1;
 
     if(result == PLAYING){
-        
         state->game_state->now_plays = 3-(state->game_state->now_plays);
         g_timeout_add(100,await_other_side,state);
 
@@ -473,7 +598,51 @@ void execute_move(GtkWidget *widget, window_state *state){
 void cancel_move(GtkWidget *widget, window_state *state){
     board_clear_marked(state->game_state->bo);
     reset_board_to_data(state);
-    state->game_state->plays_left = 1;
+    update_status_change(state->game_state->recv_status,state);
+}
+
+void react_for_received_special(int status,window_state* window){
+    game_state* state = window->game_state;
+    switch(status){
+        case NORMAL:
+            state->recv_status = NORMAL;
+            break;
+        case PRO_1:
+            state->recv_status = PRO_2;
+        break;
+        case PRO_2:
+            state->recv_status = PRO_3;
+        break;
+        case PRO_3:
+            state->recv_status = NORMAL;
+        break;
+        case SWAP_1:
+            state->recv_status = SWAP_2;
+        break;
+        case SWAP_2:
+            printf("\nwhat? invalid state\n");
+        break;
+        case SWAP_2_PLAY2:
+            state->recv_status = SWAP_3;
+        break;
+        case SWAP_2_PLAY:
+            state->recv_status = NORMAL;
+        break;
+        case SWAP_2_SWAP:
+            state->player = 3-state->player;
+            state->now_plays = state->player;
+            state->recv_status = NORMAL;
+        break;
+        case SWAP_3:
+            printf("\nwhat? invalid state\n");
+        case SWAP_3_SWAP:
+            state->player = 3-state->player;
+            state->now_plays = state->player;
+            state->recv_status = NORMAL;
+        break;
+        default: 
+        printf("\nwhat?\n");
+    }
 }
 
 int await_other_side(void * data){
@@ -491,6 +660,10 @@ int await_other_side(void * data){
         int special;
         sscanf(buffer,"%d",&special);
         printf("special: %d\n",special);
+
+        react_for_received_special(special,window);
+        update_status_change(game->recv_status,window);
+
         char* data_start = buffer;
 
         while(*data_start!=';'){
@@ -505,7 +678,7 @@ int await_other_side(void * data){
         if(result != INVALID_MOVE){
 
             if(result == PLAYING){
-                game->now_plays = 3-(game->now_plays);
+                game->now_plays = game->player;
             }else{
                 if(game->now_plays==game->player){
                     show_info(window->window,"Wygrałeś");
