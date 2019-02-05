@@ -29,6 +29,7 @@ typedef struct game_state_t{
     int socket;   
     int player;
     int now_plays;
+    int base_player;
     int plays_left;
     int turn;
     int ended;

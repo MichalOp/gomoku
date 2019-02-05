@@ -126,7 +126,7 @@ int board_execute_marked(board b, char* moves){
             }
         }
     }
-    return PLAYING;
+    return result;
 }
 
 int board_execute_from_char(board b, char* moves){
@@ -135,8 +135,6 @@ int board_execute_from_char(board b, char* moves){
     int result = PLAYING;
     while(1){
         while(*moves!=';'){
-            printf("%c",*moves);
-            fflush(stdout);
             if(*moves == 0){
                 return result;
             }
@@ -145,8 +143,6 @@ int board_execute_from_char(board b, char* moves){
         moves = moves+1;
         int c, i, j;
         sscanf(old_moves,"%d %d %d", &c, &i, &j);
-        printf("data: %d %d %d\n",c, i, j);
-        fflush(stdout);
         old_moves = moves;
         int play_result = board_play(b,i,j,c,0);
         if(result == PLAYING){

@@ -22,10 +22,6 @@ int wait_for_connection(int s, int timeout){
     {
         return accept(s, NULL, NULL);
     }
-    else
-    {
-        printf("waiting");
-    }
     return 0;
 }
 
@@ -37,6 +33,8 @@ int try_read(int sock, char* data, int buffer_size, int timeout_ms){
     ret = poll(&fd, 1, timeout_ms);
     switch (ret) {
         case -1:
+            printf("socket closed\n");
+            fflush(stdout);
             return -1;
         case 0:
             return 0;
@@ -56,16 +54,16 @@ int init_server(){
     // Creating socket file descriptor 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
     { 
-        perror("socket failed"); 
-        exit(EXIT_FAILURE); 
+        printf("socket failed"); 
+        return 0;
     } 
     //printf("here\n");
     
     // Forcefully attaching socket to the port 8080 
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
     { 
-        perror("setsockopt"); 
-        exit(EXIT_FAILURE); 
+        printf("setsockopt"); 
+        return 0;
     } 
     
     //printf("here\n");
@@ -77,14 +75,14 @@ int init_server(){
     if (bind(server_fd, (struct sockaddr *)&sockaddr_data,  
                                  sizeof(sockaddr_data))<0) 
     { 
-        perror("bind failed"); 
-        exit(EXIT_FAILURE); 
+        printf("bind failed"); 
+        return 0;
     } 
     
     if (listen(server_fd, 3) < 0) 
     { 
-        perror("listen"); 
-        exit(EXIT_FAILURE); 
+        printf("listen"); 
+        return 0;
     } 
     
     return server_fd;  
@@ -98,7 +96,7 @@ int init_client(char* address){
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
         printf("\n Socket creation error \n"); 
-       exit(EXIT_FAILURE); 
+        return 0;
     } 
    
     memset(&sockaddr_data, '0', sizeof(sockaddr_data)); 
@@ -110,13 +108,13 @@ int init_client(char* address){
     if(inet_pton(AF_INET, address, &sockaddr_data.sin_addr)<=0)  
     { 
         printf("\nInvalid address/ Address not supported \n"); 
-        exit(EXIT_FAILURE); 
+        return 0;
     } 
    
     if (connect(sock, (struct sockaddr *)&sockaddr_data, sizeof(sockaddr_data)) < 0) 
     { 
         printf("\nConnection Failed \n"); 
-        exit(EXIT_FAILURE); 
+        return 0;
     } 
     return sock; 
 
