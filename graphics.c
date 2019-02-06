@@ -2,6 +2,9 @@
 #include "networking.h"
 #include <glib.h>
 #include <stdio.h>
+#include <time.h>
+
+#define BOARD_SIZE 15
 
 #define NORMAL 0
 #define PRO_1 1
@@ -235,7 +238,7 @@ void setup_game(window_state* state){
 
     game_state* game_s = malloc(sizeof(game_state));
     memset(game_s,0,sizeof(game_state));
-    game_s->buttons = malloc(sizeof(board_button_data**)*15);
+    game_s->buttons = malloc(sizeof(board_button_data**)*BOARD_SIZE);
     state->game_state = game_s;
 
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -253,15 +256,15 @@ void setup_game(window_state* state){
     GtkWidget * label;
     GError **err = NULL;
     GdkPixbuf* template_pictures[3];
-    template_pictures[1] = gdk_pixbuf_new_from_file("./images/black.png",err);
-    template_pictures[2] = gdk_pixbuf_new_from_file("./images/white.png",err);
-    template_pictures[0] = gdk_pixbuf_new_from_file("./images/unknown.png",err);
+    template_pictures[1] = gdk_pixbuf_scale_simple(gdk_pixbuf_new_from_file("./images/black.png",err),40,40,GDK_INTERP_BILINEAR);
+    template_pictures[2] = gdk_pixbuf_scale_simple(gdk_pixbuf_new_from_file("./images/white.png",err),40,40,GDK_INTERP_BILINEAR);
+    template_pictures[0] = gdk_pixbuf_scale_simple(gdk_pixbuf_new_from_file("./images/unknown.png",err),40,40,GDK_INTERP_BILINEAR);
 
     //board bo = board_init(15,15,5,4);
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < BOARD_SIZE; i++)
     {
-        game_s->buttons[i] = malloc(sizeof(board_button_data*)*15);
-        for(int j = 0; j < 15; j++){
+        game_s->buttons[i] = malloc(sizeof(board_button_data*)*BOARD_SIZE);
+        for(int j = 0; j < BOARD_SIZE; j++){
             GtkWidget* event_box = gtk_event_box_new();
             label = gtk_image_new_from_pixbuf(template_pictures[0]);
             gtk_container_add(GTK_CONTAINER(event_box),label);
@@ -473,7 +476,7 @@ void update_status_change(int status,window_state* window){ //JESUS CHRIST
 void start_game(window_state* window){
     game_state* state = window->game_state;
     //board_free(state->bo);
-    state->bo = board_init(15,15,5,WIN_RULE_GREATER_OR_EQUAL);
+    state->bo = board_init(BOARD_SIZE,BOARD_SIZE,5,WIN_RULE_GREATER_OR_EQUAL);
     for(int i = 0; i< state->bo.size_x; i++){
         for(int j = 0; j< state->bo.size_y; j++){
             gtk_image_set_from_pixbuf(state->buttons[i][j]->image,state->buttons[i][j]->template_images[0]);
@@ -504,7 +507,7 @@ int on_connect(void * data){
     int side; 
 
     char start_msg[256];
-
+    srand(time(NULL));
     if(state->connection_data->base_server_socket != 0){ //server
         side = rand()%2;
         sprintf(start_msg,"%d %d",1-side,state->game_state->mode);
@@ -672,7 +675,6 @@ void react_for_received_special(int status,window_state* window){
             state->player = 3-state->player;
             state->now_plays = state->player;
             state->recv_status = NORMAL;
-            show_info(window->window,"Drugi gracz zamienił kolory, grasz teraz czarnymi");
         break;
         default: 
         printf("\nwhat?\n");
