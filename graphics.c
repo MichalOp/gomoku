@@ -18,7 +18,7 @@
 #define SWAP_3 9
 #define SWAP_3_SWAP 10
 
-static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data);
+void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data);
 void to_main_menu(GtkWidget *widget, window_state *state);
 void to_server_setup(GtkWidget *widget, window_state *state);
 void to_client_setup(GtkWidget *widget, window_state *state);
@@ -44,6 +44,13 @@ void click_play_two(GtkWidget* widget, window_state* state);
 int await_other_side(void * data);
 
 void start_game(window_state* window);
+board_button_data* board_button_data_create(window_state* state,int x, int y, GtkImage* image, GdkPixbuf** template_images);
+void show_info(GtkWidget* window, char *komunikat);
+void setup_main_menu(window_state* state);
+void setup_server_menu(window_state* state);
+void setup_client_menu(window_state* state);
+GtkWidget* setup_game_menu_stack(window_state* state);
+void setup_game(window_state* state);
 
 void show_info(GtkWidget* window, char *komunikat)
 {
@@ -287,19 +294,20 @@ void to_game(GtkWidget *widget, window_state *state){
 
 void to_main_menu(GtkWidget *widget, window_state *state){
     int result = send(state->game_state->socket,"e",1,0);
-    if(result == -1){
-        printf("connection already closed\n");
+    
+    if(result==-1){
+        //printf("connection already closed\n");
     }
 
     if(state->game_state->socket){
         close(state->game_state->socket);
         state->game_state->socket = 0;
-        printf("closing connection\n");
+        //printf("closing connection\n");
     }
     if(state->connection_data->base_server_socket){
         close(state->connection_data->base_server_socket);
         state->connection_data->base_server_socket = 0;
-        printf("closing server\n");
+        //printf("closing server\n");
     }
     state->connection_data->try_to_connect = false;
     gtk_stack_set_visible_child_name(GTK_STACK(state->stack),"main_menu");
@@ -345,7 +353,7 @@ void select_game_mode(GtkWidget *widget, window_state *state){
 
 void edit_address(GtkWidget* widget, GdkEvent  *event, window_state *state){
     strcpy(state->connection_data->address, gtk_entry_get_text(GTK_ENTRY(widget)));
-    printf("%s\n", state->connection_data->address);
+    //printf("%s\n", state->connection_data->address);
     //return FALSE;
 }
 
@@ -549,14 +557,15 @@ void client_connect(GtkWidget *widget, window_state *state){
     state->game_state->now_plays = 1;
     int sock = init_client(state->connection_data->address);
     if(sock == 0){
+        show_info(state->window,"Nie udało się połączyć z serwerem");
         return;
     }
-    printf("%d\n",sock);
+    //printf("%d\n",sock);
     state->game_state->socket = sock;
     g_timeout_add(0,on_connect, state);
 }
 
-static void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
+void play_button_press(GtkWidget *widget, GdkEvent* foo, gpointer data)
 {
     board_button_data* board_data = (board_button_data*)data;
     try_play(board_data->game_data,board_data->x,board_data->y);
@@ -590,8 +599,6 @@ void execute_move(GtkWidget *widget, window_state *state){
     if(state->game_state->plays_left != 0||state->game_state->player!= state->game_state->now_plays){
         return;
     }
-
-    
 
     char message[1024];
     message[0] = 0;

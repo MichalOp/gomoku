@@ -48,5 +48,3 @@ typedef struct window_state_t{
 }window_state;
 
 void setup_menus();
-
-board_button_data* board_button_data_create(window_state* state,int x, int y, GtkImage* image, GdkPixbuf** template_images);
